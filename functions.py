@@ -1,11 +1,7 @@
-import os
-import sys
 import pandas as pd
 from bs4 import BeautifulSoup
 import requests
-import sqlite3 as sl
 import csv
-import os
 import psycopg2
 import plotly.express as px
 import datetime
@@ -24,10 +20,10 @@ class MyClass():
         self.wilgotnosc_wzgledna = wilgotnosc_wzgledna
         self.suma_opadu = suma_opadu
         self.cisnienie = cisnienie
-        
+
     def do_conn():
         return psycopg2.connect(
-            host="localhost", database="html", user="postgres", password="1569"
+            host="localhost", database="html", user="postgres", password="NstftHLz"
         )
 ########################################
 
@@ -38,7 +34,7 @@ def table_exists(table_name):
     cursor.execute(f"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '{table_name}')")
     conn.close
     return cursor.fetchone()[0]
-        
+
 def save_data_to_csv(csv_file):
     data = []
 
@@ -113,8 +109,8 @@ def insert_data(id_stacji, stacja, data_pomiaru, godzina_pomiaru, temperatura, p
 
     # Insert the data
     cur.execute('''INSERT INTO MyClass (id_stacji, stacja, data_pomiaru, godzina_pomiaru, temperatura, predkosc_wiatru, kierunek_wiatru, wilgotnosc_wzgledna, suma_opadu, cisnienie)
-                  VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
-               (id_stacji, stacja, data_pomiaru, godzina_pomiaru, temperatura,predkosc_wiatru, kierunek_wiatru, wilgotnosc_wzgledna, suma_opadu, cisnienie))
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
+            (id_stacji, stacja, data_pomiaru, godzina_pomiaru, temperatura,predkosc_wiatru, kierunek_wiatru, wilgotnosc_wzgledna, suma_opadu, cisnienie))
 
     # Commit the changes
     conn.commit()
@@ -137,8 +133,6 @@ def insert_data_from_csv(csv_file):
     # Close the connection
     conn.close()
 
-
-# TODO Rename this here and in `insert_data_from_csv`
 def _extracted_from_insert_data_from_csv_10(f, cur):
     # Create a CSV reader
     reader = csv.reader(f)
@@ -205,12 +199,12 @@ def _extracted_from_insert_data_from_csv_10(f, cur):
 def take_data_from_database(po_czym_filtrować, wartosc_kolumny):
     # Connect to the database
     conn = MyClass.do_conn()
-    
+
     # Create a cursor
     cur = conn.cursor()
 
     # Execute the SELECT statement
-    
+
     if po_czym_filtrować == 'stacja':
         cur.execute('''SELECT * FROM MyClass WHERE stacja = %s''', (wartosc_kolumny,))
 
@@ -227,7 +221,7 @@ def take_data_from_database(po_czym_filtrować, wartosc_kolumny):
 
     # Close the connection
     conn.close()
-    
+
     return df
 
 def make_plot(df, y_value, zakres):
@@ -252,7 +246,7 @@ def make_plot(df, y_value, zakres):
 
         # create bar polar chart with the correct number of bars and the bars colored based on air_speed
         fig = px.bar_polar(occurrences, r=occurrences.counts, theta=occurrences.wind_range, color=mean_air_speed.predkosc_wiatru,
-                   color_discrete_sequence= px.colors.sequential.Plasma_r)
+                color_discrete_sequence= px.colors.sequential.Plasma_r)
 
 
     else:
@@ -278,7 +272,8 @@ def make_plot(df, y_value, zakres):
     print(df)
 
     fig = update_title_and_x_y_based_on_kat(fig, y_value, zakres)
-    fig.show()
+    # Use 'browser' renderer to open in default browser without starting a server
+    fig.show(renderer="browser")
 
 def update_title_and_x_y_based_on_kat(fig, kat, zakres):
 
@@ -333,7 +328,6 @@ def update_title_and_x_y_based_on_kat(fig, kat, zakres):
 
     return fig
 
-# TODO Rename this here and in `make_plot`
 def _extracted_from_make_plot_6(df):
         #fig = px.line(df, x='data_godzina', y='temperatura', title=('temperatura i opad' + " / Data wraz z godziną pomiaru"))
         #fig.add_bar(x=df['data_godzina'], y=df['suma_opadu']/10, name="Suma opadu")
@@ -353,14 +347,14 @@ def _extracted_from_make_plot_6(df):
     )
 
     return result
-    
+
 def deleteDuplicates():
     # Connect to the database
     conn = MyClass.do_conn()
 
     # Create a cursor
     cur = conn.cursor()
-    
+
     cur.execute('''
         DELETE FROM MyClass
         WHERE id IN (
@@ -469,7 +463,6 @@ def filter_df(df, zakres):
 
     return filtered_df
 
-
 def save_selected_to_csv(table_name, zakres):
     conn = MyClass.do_conn()
 
@@ -484,7 +477,7 @@ def save_selected_to_csv(table_name, zakres):
     print('Data has been retrieved and saved to "downloaded.csv" file.')
 
 #Uncommnet debugging/testing    
-    
+
 # Insert the data from html to the csv
 #save_data_to_csv('data.csv')
 
@@ -495,7 +488,7 @@ def save_selected_to_csv(table_name, zakres):
 #insert_data('12345', 'Station 1', '2022-01-01', '12:00:00', '25', 'NW', '70', '0.0', '1013')
 #insert_data('23456', 'Station 2', '2022-01-01', '12:00:00', '28', 'SW', '65', '0.0', '1012')
 #insert_data('34567', 'Station 3', '2022-01-01', '12:00:00', '30', 'SE', '60', '0.0', '1011')
-    
+
 #create_table()
 
 #Test if there are tables in db
@@ -503,4 +496,3 @@ if table_exists('myclass'):
     print("Table 'MyClass' exists in the database")
 else:
     create_table()
-    

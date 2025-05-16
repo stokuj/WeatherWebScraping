@@ -1,12 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-import bs4
-from bs4 import BeautifulSoup
-import requests
-import pandas as pd
-from datetime import datetime
 import functions as f
-import plotly.express as px
 import sv_ttk
 from tkinter import PhotoImage
 
