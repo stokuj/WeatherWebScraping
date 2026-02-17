@@ -1,14 +1,43 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter import messagebox
 import functions as f
 import sv_ttk
 from tkinter import PhotoImage
+import os
 
 class App:
     def __init__(self, master):
         self.master = master
+        self._safe_db_call(f.ensure_table_exists)
+        self.fetch_interval_minutes = self._get_fetch_interval_minutes()
         self.create_widgets()
         #ttk.Style().theme_use('clam')
+
+    def _get_fetch_interval_minutes(self):
+        raw_value = os.getenv("FETCH_INTERVAL_MINUTES", "5")
+        try:
+            value = int(raw_value)
+            if value < 1:
+                return 5
+            return value
+        except ValueError:
+            return 5
+
+    def _safe_db_call(self, fn, *args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except f.DatabaseConnectionError as exc:
+            messagebox.showerror("Blad bazy danych", str(exc))
+            return None
+
+    def _safe_db_action(self, fn, *args, **kwargs):
+        try:
+            fn(*args, **kwargs)
+            return True
+        except f.DatabaseConnectionError as exc:
+            messagebox.showerror("Blad bazy danych", str(exc))
+            return False
 
     def create_widgets(self):
         lista_stacji = [
@@ -160,11 +189,11 @@ class App:
 
     def button1_callback(self):
         f.save_data_to_csv('data.csv')
-        f.insert_data_from_csv('data.csv')
+        if not self._safe_db_action(f.insert_data_from_csv, 'data.csv'):
+            return
         self.frame1["text"] = "Pracuje"
 
-        minuts = 5
-        self.master.after(minuts*60*1000, self.button1_callback)
+        self.master.after(self.fetch_interval_minutes * 60 * 1000, self.button1_callback)
 
     def button2_callback(self):
         #Take value from combbbox
@@ -172,15 +201,18 @@ class App:
         kategoria = f.change_name_to_value(self.combobox2.get())
         
         #Make pandas table
-        df = f.take_data_from_database("stacja", stacja)
+        df = self._safe_db_call(f.take_data_from_database, "stacja", stacja)
+        if df is None:
+            return
         df.sort_values(by='data_godzina', inplace=True)
         
-        f.deleteDuplicates()
+        if not self._safe_db_action(f.deleteDuplicates):
+            return
         
         f.make_plot(df, kategoria, zakres=self.combobox3.get())
     
     def button3_callback(self):
-        f.save_selected_to_csv("MyClass", zakres=self.combobox3.get())
+        self._safe_db_action(f.save_selected_to_csv, "MyClass", zakres=self.combobox3.get())
 
 
     def button4_callback(self):
@@ -189,10 +221,13 @@ class App:
         kategoria = f.change_name_to_value(self.combobox2.get())
         
         #Make pandas table
-        df = f.take_data_from_database("stacja", stacja)
+        df = self._safe_db_call(f.take_data_from_database, "stacja", stacja)
+        if df is None:
+            return
         df.sort_values(by='data_godzina', inplace=True)
         
-        f.deleteDuplicates()
+        if not self._safe_db_action(f.deleteDuplicates):
+            return
 
 
         self.mean = f.calc_mean(self.mean, df, kategoria, zakres=self.combobox3.get())
