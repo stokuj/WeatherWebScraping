@@ -191,3 +191,5 @@ cython_debug/
 
 # Ignore custom settings for run/debug configurations
 .idea/runConfigurations/
+data.csv
+downloaded.csv
