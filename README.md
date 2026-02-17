@@ -42,6 +42,7 @@ DB_PORT=5432
 DB_NAME=html
 DB_USER=postgres
 DB_PASSWORD=your_password
+FETCH_INTERVAL_MINUTES=5
 ```
 
 ## Run

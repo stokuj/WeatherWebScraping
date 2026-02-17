@@ -12,16 +12,33 @@ from dotenv import load_dotenv
 
 load_dotenv()
 ########################################
+
+class DatabaseConnectionError(Exception):
+    pass
+
+
 class MyClass():
     @staticmethod
     def do_conn():
-        return psycopg2.connect(
-            host=os.getenv("DB_HOST", "localhost"),
-            port=int(os.getenv("DB_PORT", "5432")),
-            database=os.getenv("DB_NAME", "html"),
-            user=os.getenv("DB_USER", "postgres"),
-            password=os.getenv("DB_PASSWORD", "")
-        )
+        host = os.getenv("DB_HOST", "localhost")
+        port = int(os.getenv("DB_PORT", "5432"))
+        database = os.getenv("DB_NAME", "html")
+        user = os.getenv("DB_USER", "postgres")
+        password = os.getenv("DB_PASSWORD", "")
+
+        try:
+            return psycopg2.connect(
+                host=host,
+                port=port,
+                database=database,
+                user=user,
+                password=password
+            )
+        except psycopg2.OperationalError as exc:
+            raise DatabaseConnectionError(
+                "Nie mozna polaczyc sie z PostgreSQL albo baza nie istnieje. "
+                f"Sprawdz .env (DB_HOST={host}, DB_PORT={port}, DB_NAME={database}, DB_USER={user})."
+            ) from exc
 ########################################
 
 
