@@ -7,6 +7,7 @@ from tkinter import PhotoImage
 class App:
     def __init__(self, master):
         self.master = master
+        f.ensure_table_exists()
         self.create_widgets()
         #ttk.Style().theme_use('clam')
 

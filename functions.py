@@ -7,23 +7,20 @@ import plotly.express as px
 import datetime
 import plotly.graph_objects as go
 import plotly.subplots as er
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 ########################################
 class MyClass():
-    def __init__(self, id_stacji, stacja, data_pomiaru, godzina_pomiaru, temperatura, predkosc_wiatru, kierunek_wiatru, wilgotnosc_wzgledna, suma_opadu, cisnienie):
-        self.id_stacji = id_stacji
-        self.stacja = stacja
-        self.data_pomiaru = data_pomiaru
-        self.godzina_pomiaru = godzina_pomiaru
-        self.temperatura = temperatura
-        self.predkosc_wiatru = predkosc_wiatru
-        self.kierunek_wiatru = kierunek_wiatru
-        self.wilgotnosc_wzgledna = wilgotnosc_wzgledna
-        self.suma_opadu = suma_opadu
-        self.cisnienie = cisnienie
-
+    @staticmethod
     def do_conn():
         return psycopg2.connect(
-            host="localhost", database="html", user="postgres", password="NstftHLz"
+            host=os.getenv("DB_HOST", "localhost"),
+            port=int(os.getenv("DB_PORT", "5432")),
+            database=os.getenv("DB_NAME", "html"),
+            user=os.getenv("DB_USER", "postgres"),
+            password=os.getenv("DB_PASSWORD", "")
         )
 ########################################
 
@@ -31,9 +28,13 @@ class MyClass():
 def table_exists(table_name):
     conn = MyClass.do_conn()
     cursor = conn.cursor()
-    cursor.execute(f"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '{table_name}')")
-    conn.close
-    return cursor.fetchone()[0]
+    cursor.execute(
+        "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = %s)",
+        (table_name,)
+    )
+    exists = cursor.fetchone()[0]
+    conn.close()
+    return exists
 
 def save_data_to_csv(csv_file):
     data = []
@@ -77,7 +78,7 @@ def create_table():
     cur = conn.cursor()
 
     # Create the table
-    cur.execute('''CREATE TABLE MyClass 
+    cur.execute('''CREATE TABLE IF NOT EXISTS MyClass 
                 (
                 id SERIAL PRIMARY KEY,
                 id_stacji INTEGER,
@@ -92,25 +93,6 @@ def create_table():
                 cisnienie FLOAT,
                 data_godzina TIMESTAMP
     )''')
-
-    # Commit the changes
-    conn.commit()
-
-    # Close the connection
-    conn.close()
-
-#Not used amt    
-def insert_data(id_stacji, stacja, data_pomiaru, godzina_pomiaru, temperatura, predkosc_wiatru, kierunek_wiatru, wilgotnosc_wzgledna, suma_opadu, cisnienie):
-    # Connect to the database
-    conn = MyClass.do_conn()
-
-    # Create a cursor
-    cur = conn.cursor()
-
-    # Insert the data
-    cur.execute('''INSERT INTO MyClass (id_stacji, stacja, data_pomiaru, godzina_pomiaru, temperatura, predkosc_wiatru, kierunek_wiatru, wilgotnosc_wzgledna, suma_opadu, cisnienie)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
-            (id_stacji, stacja, data_pomiaru, godzina_pomiaru, temperatura,predkosc_wiatru, kierunek_wiatru, wilgotnosc_wzgledna, suma_opadu, cisnienie))
 
     # Commit the changes
     conn.commit()
@@ -476,23 +458,6 @@ def save_selected_to_csv(table_name, zakres):
     conn.close()
     print('Data has been retrieved and saved to "downloaded.csv" file.')
 
-#Uncommnet debugging/testing    
-
-# Insert the data from html to the csv
-#save_data_to_csv('data.csv')
-
-# Insert the data from the CSV file to database
-#insert_data_from_csv('data.csv')
-
-# Insert some example data
-#insert_data('12345', 'Station 1', '2022-01-01', '12:00:00', '25', 'NW', '70', '0.0', '1013')
-#insert_data('23456', 'Station 2', '2022-01-01', '12:00:00', '28', 'SW', '65', '0.0', '1012')
-#insert_data('34567', 'Station 3', '2022-01-01', '12:00:00', '30', 'SE', '60', '0.0', '1011')
-
-#create_table()
-
-#Test if there are tables in db
-if table_exists('myclass'):
-    print("Table 'MyClass' exists in the database")
-else:
-    create_table()
+def ensure_table_exists():
+    if not table_exists('myclass'):
+        create_table()

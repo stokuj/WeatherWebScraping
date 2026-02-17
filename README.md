@@ -1,4 +1,4 @@
-# Weather Web Scraping
+﻿# Weather Web Scraping
 
 A desktop weather monitoring app that collects current observations from IMGW, stores them in PostgreSQL, and visualizes trends with interactive Plotly charts.
 
@@ -19,24 +19,34 @@ A desktop weather monitoring app that collects current observations from IMGW, s
 ## Requirements
 - Python 3.10+
 - PostgreSQL
-- Dependencies from `requirements.txt`
+- `uv`
 
-## Setup
-1. Create and activate a virtual environment:
+## Setup (uv)
+1. Install `uv` and sync environment from `pyproject.toml`:
 ```bash
-python -m venv .venv
-.venv\\Scripts\\activate
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+uv sync
 ```
-2. Install dependencies:
+2. Create `.env` from the template:
 ```bash
-pip install -r requirements.txt
+Copy-Item .env.example .env
 ```
-3. Create a PostgreSQL database named `html`.
-4. Update database credentials in `functions.py` inside `MyClass.do_conn()`.
+3. Edit `.env` and set your PostgreSQL credentials.
+4. Create a PostgreSQL database (default from template: `html`).
+
+## Database Configuration (.env)
+Use these variables in `.env`:
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=html
+DB_USER=postgres
+DB_PASSWORD=your_password
+```
 
 ## Run
 ```bash
-python app.py
+uv run python app.py
 ```
 
 ## Project Files
@@ -44,9 +54,11 @@ python app.py
 - `functions.py` - scraping, database operations, filtering, plotting, CSV export.
 - `data.csv` - latest downloaded source snapshot.
 - `downloaded.csv` - user-exported filtered data.
+- `.env.example` - environment variables template for local setup.
 
 ## Data Source
 IMGW public data: `https://danepubliczne.imgw.pl/api/data/synop/format/html`
 
 ## License
-MIT (see `LICENSE`).
+This project is intended for educational use only.
+Licensed under the MIT License. See LICENSE for details.
