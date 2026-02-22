@@ -2,6 +2,18 @@
 
 A desktop weather monitoring app that collects current observations from IMGW, stores them in PostgreSQL, and visualizes trends with interactive Plotly charts.
 
+## Project Files
+
+```text
+|-- pyproject.toml
+|-- uv.lock
+|-- .env.example - environment variables template for local setup.
+|-- app.py - Tkinter user interface.
+|-- functions.py - scraping, database operations, filtering, plotting, CSV export.
+|-- data.csv - latest downloaded source snapshot.
+|-- downloaded.csv - user-exported filtered data.
+```
+
 ## Features
 - Fetches weather data from IMGW Synop endpoint.
 - Stores records in PostgreSQL.
@@ -49,13 +61,6 @@ FETCH_INTERVAL_MINUTES=5
 ```bash
 uv run python app.py
 ```
-
-## Project Files
-- `app.py` - Tkinter user interface.
-- `functions.py` - scraping, database operations, filtering, plotting, CSV export.
-- `data.csv` - latest downloaded source snapshot.
-- `downloaded.csv` - user-exported filtered data.
-- `.env.example` - environment variables template for local setup.
 
 ## Data Source
 IMGW public data: `https://danepubliczne.imgw.pl/api/data/synop/format/html`
